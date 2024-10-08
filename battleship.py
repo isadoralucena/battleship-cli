@@ -7,7 +7,7 @@ class Battleship:
         self.stdscr = stdscr
         self.difficulty_level = difficulty_level
         self.num_ships = self.calculate_num_ships()
-        self.points = self.calculate_points()
+        self.chances = self.calculate_chances()
 
         self.ship_list = []
         self.cursor_x, self.cursor_y = 1, 1
@@ -40,23 +40,35 @@ class Battleship:
         return random.randint(5, int(max_ships * self.difficulty_level))
 
 
-    def calculate_points(self):
+    def calculate_chances(self):
         return random.randint(5, max(5, int(self.num_ships * self.difficulty_level)))
    
 
-    def draw_ship(self, x, y):
-        self.win.addstr(y, x, 'N')
+    def draw_ship(self, positions):
+        for (x, y) in positions:
+            self.win.addstr(y, x, 'N')
         self.win.refresh()
 
 
     def generate_ships(self):
         for _ in range(self.num_ships):
             while True:
-                x = random.randint(1, self.win_width - 2)
-                y = random.randint(1, self.win_height-2)
-                if not any(ship.position == (x, y) for ship in self.ship_list):
-                    self.ship_list.append(Ship(x, y))
-                    # self.draw_ship(x, y)
+                ship_size = random.choice([1, 2, 3, 4])
+                orientation = random.choice(["horizontal", "vertical"])
+
+                if orientation == "horizontal":
+                    x = random.randint(1, self.win_width - 2 - ship_size)
+                    y = random.randint(1, self.win_height - 2)
+                else:  
+                    x = random.randint(1, self.win_width - 2)
+                    y = random.randint(1, self.win_height - 2 - ship_size)
+
+                new_ship_positions = [(x + i, y) if orientation == "horizontal" else (x, y + i) for i in range(ship_size)]
+
+                if not any(set(new_ship_positions) & set(ship.positions) for ship in self.ship_list):
+                    new_ship = Ship(new_ship_positions)
+                    self.ship_list.append(new_ship)
+                    self.draw_ship(new_ship_positions)
                     break
 
 
@@ -66,8 +78,8 @@ class Battleship:
         ships_text = f"Navios: {self.num_ships}"
         self.stdscr.addstr(0, self.columns - len(ships_text) - 1, ships_text)
 
-        points_text = f"Pontos: {self.points}"
-        self.stdscr.addstr(1, self.columns - len(points_text) - 1, points_text)
+        chances_text = f"Chances: {self.chances}"
+        self.stdscr.addstr(1, self.columns - len(chances_text) - 1, chances_text)
 
         self.stdscr.refresh()
 
@@ -87,7 +99,7 @@ class Battleship:
         for ship in self.ship_list:
             if ship.hit_ship(self.cursor_x, self.cursor_y): 
                 self.win.addstr(self.cursor_y, self.cursor_x, 'N') #🚢
-                self.points += 1
+                self.chances += 1
                 self.num_ships -= 1
                 self.win.refresh() 
                 return  
@@ -96,7 +108,7 @@ class Battleship:
             return  
 
         self.win.addstr(self.cursor_y, self.cursor_x, '*') # 💥
-        self.points -= 1
+        self.chances -= 1
         self.win.refresh()  
        
 
@@ -112,7 +124,7 @@ class Battleship:
             key = self.win.getch()
             self.win.addstr(self.cursor_y, self.cursor_x, self.last_char)
 
-            if key == ord('q') or self.points == 0 or self.num_ships == 0:
+            if key == ord('q') or self.chances == 0 or self.num_ships == 0:
                 break
             elif key == ord('\n'):
                 self.fire()

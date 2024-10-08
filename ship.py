@@ -1,15 +1,14 @@
 class Ship:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.hit = False
-
-    @property
-    def position(self):
-        return self.x, self.y
+    def __init__(self, positions):
+        self._hit = False
+        self._positions = positions
     
+    @property
+    def positions(self):
+        return self._positions
+
     def hit_ship(self, x, y):
-        if (self.x, self.y) == (x, y) and not self.hit:
-            self.hit = True
+        if (x, y) in self._positions and not self._hit:
+            self._hit = True
             return True
         return False
