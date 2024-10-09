@@ -3,11 +3,21 @@ import random
 import curses
 
 class Battleship:
-    def __init__(self, stdscr, difficulty_level=0.1):
+    def __init__(self, stdscr, difficulty_level=0.1, use_emoji=False):
         self.stdscr = stdscr
         self.difficulty_level = difficulty_level
         self.num_ships = self.calculate_num_ships()
         self.chances = self.calculate_chances()
+
+        self.use_emoji = use_emoji
+        self.intermediate_character_of_ship = "🚢" if self.use_emoji else "N"
+        self.explosion_character = "💥" if self.use_emoji else "*"
+        self.ship_size_and_appearance = {
+            1: ("S", "🟦"),
+            2: ("D", "🟪"),
+            3: ("C", "🟨"),
+            4: ("P", "🟩")
+        }
 
         self.ship_list = []
         self.cursor_x, self.cursor_y = 1, 1
@@ -46,7 +56,7 @@ class Battleship:
 
     def draw_ship(self, positions):
         for (x, y) in positions:
-            self.win.addstr(y, x, 'N')
+            self.win.addstr(y, x, self.intermediate_character_of_ship)
         self.win.refresh()
 
 
@@ -56,19 +66,15 @@ class Battleship:
                 ship_size = random.choice([1, 2, 3, 4])
                 orientation = random.choice(["horizontal", "vertical"])
 
-                if orientation == "horizontal":
-                    x = random.randint(1, self.win_width - 2 - ship_size)
-                    y = random.randint(1, self.win_height - 2)
-                else:  
-                    x = random.randint(1, self.win_width - 2)
-                    y = random.randint(1, self.win_height - 2 - ship_size)
+                x = random.randint(1, self.win_width - 2 - (ship_size if orientation == "horizontal" else 0))
+                y = random.randint(1, self.win_height - 2 - (ship_size if orientation == "vertical" else 0))
 
                 new_ship_positions = [(x + i, y) if orientation == "horizontal" else (x, y + i) for i in range(ship_size)]
 
                 if not any(set(new_ship_positions) & set(ship.positions) for ship in self.ship_list):
                     new_ship = Ship(new_ship_positions)
                     self.ship_list.append(new_ship)
-                    self.draw_ship(new_ship_positions)
+                    # self.draw_ship(new_ship_positions)
                     break
 
 
@@ -97,20 +103,25 @@ class Battleship:
 
     def fire(self):
         for ship in self.ship_list:
-            if ship.hit_ship(self.cursor_x, self.cursor_y): 
-                self.win.addstr(self.cursor_y, self.cursor_x, 'N') #🚢
+            if ship.register_hit(self.cursor_x, self.cursor_y):
+                if ship.hit:
+                    appearance = self.ship_size_and_appearance[len(ship.positions)][1] if self.use_emoji else self.ship_size_and_appearance[len(ship.positions)][0]
+                    for (x, y) in ship.positions:
+                        self.win.addstr(y, x, appearance)
+                    self.num_ships -= 1
+                else:
+                    self.win.addstr(self.cursor_y, self.cursor_x, self.intermediate_character_of_ship)
                 self.chances += 1
-                self.num_ships -= 1
                 self.win.refresh() 
                 return  
-            
-        if any(ship.position == (self.cursor_x, self.cursor_y) and ship.hit for ship in self.ship_list):
+
+        if any((self.cursor_x, self.cursor_y) in ship.positions and ship.register_hit for ship in self.ship_list):
             return  
 
-        self.win.addstr(self.cursor_y, self.cursor_x, '*') # 💥
+        self.win.addstr(self.cursor_y, self.cursor_x, self.explosion_character)
         self.chances -= 1
         self.win.refresh()  
-       
+
 
     def play(self):
         self.setup()
