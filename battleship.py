@@ -1,11 +1,12 @@
 from ship import Ship
 import random
 import curses
+import sys
 
 class Battleship:
-    def __init__(self, stdscr, difficulty_level=0.1, use_emoji=False):
+    def __init__(self, stdscr, difficulty_percentage=0.1, use_emoji=False):
         self.stdscr = stdscr
-        self.difficulty_level = difficulty_level
+        self.difficulty_percentage = difficulty_percentage
         self.num_ships = self.calculate_num_ships()
         self.chances = self.calculate_chances()
 
@@ -18,6 +19,19 @@ class Battleship:
             3: ("C", "🟨"),
             4: ("P", "🟩")
         }
+
+        self.menu_options = ["Jogar", "Configurações", "Sair"]
+        self.selected_option = 0
+        self.difficulty_levels = ["Fácil", "Médio", "Difícil"]
+        self.difficulty_index = 2 
+        self.title = [
+            "██████╗  █████╗ ████████╗ █████╗ ██╗     ██╗  ██╗ █████╗     ███╗   ██╗ █████╗ ██╗   ██╗ █████╗ ██╗     ",
+            "██╔══██╗██╔══██╗╚══██╔══╝██╔══██╗██║     ██║  ██║██╔══██╗    ████╗  ██║██╔══██╗██║   ██║██╔══██╗██║     ",
+            "██████╔╝███████║   ██║   ███████║██║     ███████║███████║    ██╔██╗ ██║███████║██║   ██║███████║██║     ",
+            "██╔══██╗██╔══██║   ██║   ██╔══██║██║     ██╔══██║██╔══██║    ██║╚██╗██║██╔══██║╚██╗ ██╔╝██╔══██║██║     ",
+            "██████╔╝██║  ██║   ██║   ██║  ██║███████╗██║  ██║██║  ██║    ██║ ╚████║██║  ██║ ╚████╔╝ ██║  ██║███████╗",
+            "╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝    ╚═╝  ╚═══╝╚═╝  ╚═╝  ╚═══╝  ╚═╝  ╚═╝╚══════╝"
+        ]
 
         self.ship_list = []
         self.cursor_x, self.cursor_y = 1, 1
@@ -47,11 +61,11 @@ class Battleship:
     def calculate_num_ships(self):
         rows, columns = self.stdscr.getmaxyx()
         max_ships = (rows - 2) * (columns - 2)
-        return random.randint(5, int(max_ships * self.difficulty_level))
+        return random.randint(5, int(max_ships * self.difficulty_percentage))
 
 
     def calculate_chances(self):
-        return random.randint(5, max(5, int(self.num_ships * self.difficulty_level)))
+        return random.randint(5, max(5, int(self.num_ships * self.difficulty_percentage)))
    
 
     def draw_ship(self, positions):
@@ -89,6 +103,18 @@ class Battleship:
 
         self.stdscr.refresh()
 
+    def stylized_title(self):
+        empty_space = 2  
+        rows, columns = self.stdscr.getmaxyx()
+
+        curses.start_color()
+        curses.init_pair(1, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+
+        for i, line in enumerate(self.title):
+            self.stdscr.addstr(empty_space + i, (columns - len(line)) // 2, line, curses.color_pair(1))
+
+        self.stdscr.refresh()
+
 
     def move_cursor(self, key):
         if key == curses.KEY_RIGHT and self.cursor_x < self.win_width - 2:
@@ -99,6 +125,85 @@ class Battleship:
             self.cursor_y += 1
         elif key == curses.KEY_UP and self.cursor_y > 1:
             self.cursor_y -= 1
+
+    def menu(self):
+        while True:
+            self.draw_menu() 
+
+            key = self.stdscr.getch()
+
+            if key == curses.KEY_UP: 
+                self.selected_option = (self.selected_option - 1) % len(self.menu_options)
+            elif key == curses.KEY_DOWN:
+                self.selected_option = (self.selected_option + 1) % len(self.menu_options)
+            elif key in [curses.KEY_ENTER, 10, 13]:  
+                if self.selected_option == 0: 
+                    break
+                elif self.selected_option == 1: 
+                    self.show_settings()  
+                elif self.selected_option == 2:  
+                    sys.exit(0)
+            elif key == ord('q'):
+                sys.exit(0)
+
+    def draw_menu(self):
+        self.stdscr.clear()
+        height, width = self.stdscr.getmaxyx()
+        curses.curs_set(0)
+
+        self.stylized_title()
+
+        title = "MENU INICIAL"
+        title_y = len(self.title) + 4 
+        self.stdscr.addstr(title_y, (width - len(title)) // 2, title, curses.A_BOLD)
+
+        for idx, option in enumerate(self.menu_options):
+            option_y = title_y + 2 + idx 
+            if idx == self.selected_option:
+                self.stdscr.addstr(option_y, (width - len(option)) // 2, option, curses.A_REVERSE) 
+            else:
+                self.stdscr.addstr(option_y, (width - len(option)) // 2, option)
+
+        self.stdscr.refresh()  
+
+    def show_settings(self):
+        while True:
+            self.stdscr.clear() 
+            height, width = self.stdscr.getmaxyx()
+
+            self.stylized_title()
+
+            settings_title = "CONFIGURAÇÕES"
+            settings_title_y = len(self.title) + 4 
+            self.stdscr.addstr(settings_title_y, (width - len(settings_title)) // 2, settings_title, curses.A_BOLD)
+
+            start_line = settings_title_y + 2
+
+            difficulty_text = f"Dificuldade: {self.difficulty_levels[self.difficulty_index]}"
+            self.stdscr.addstr(start_line, (width - len(difficulty_text)) // 2, difficulty_text)
+
+            emojis_text = "Usar Emojis: " + ("Sim" if self.use_emoji else "Não")
+            self.stdscr.addstr(start_line + 1, (width - len(emojis_text)) // 2, emojis_text)
+
+            instructions = [
+                "Pressione 'd' para mudar a dificuldade.",
+                "Pressione 'e' para mudar a opção de emojis.",
+                "Pressione qualquer tecla para voltar ao menu."
+            ]
+            
+            for idx, instruction in enumerate(instructions):
+                self.stdscr.addstr(start_line + 5 + idx, (width - len(instruction)) // 2, instruction)
+
+            self.stdscr.refresh() 
+
+            key = self.stdscr.getch()  
+            if key == ord('d'):  
+                self.difficulty_index = (self.difficulty_index + 1) % len(self.difficulty_levels)
+            elif key == ord('e'): 
+                self.use_emoji = not self.use_emoji
+            else:  
+                break
+
 
 
     def fire(self):
@@ -125,6 +230,7 @@ class Battleship:
 
     def play(self):
         self.setup()
+        self.menu()
 
         while True:
             self.draw_status()

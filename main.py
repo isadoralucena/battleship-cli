@@ -5,4 +5,5 @@ def main(stdscr):
     game = Battleship(stdscr)
     game.play()
 
+
 curses.wrapper(main)
