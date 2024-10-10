@@ -10,7 +10,7 @@ class Battleship:
 
         self.difficulty_map = {
             0: 0.40,
-            1: 0.01 
+            1: 0.05
         }
         self.difficulty_percentage = self.difficulty_map[difficulty_index]
 
@@ -50,14 +50,19 @@ class Battleship:
         curses.curs_set(0)
         self.stdscr.clear()
 
-        text = "BATALHA NAVAL"
+        text = "VOCÊ CONSEGUE VENCER O ALGORITMO?"
         self.rows, self.columns = self.stdscr.getmaxyx()
-        self.stdscr.addstr(0, (self.columns - len(text)) // 2, text)
+        self.stdscr.addstr(1, (self.columns - len(text)) // 2, text)
         self.stdscr.refresh()
 
-        self.win_height = self.rows - 2
-        self.win_width = self.columns
-        self.win = curses.newwin(self.win_height, self.win_width, 2, 0)
+        self.win_height = self.rows - 6
+        self.win_width = self.columns//2 + 2
+
+        start_y = (self.rows - self.win_height) // 2
+        start_x = (self.columns - self.win_width) // 2
+
+
+        self.win = curses.newwin(self.win_height, self.win_width, start_y, start_x)
         self.win.border()
         self.win.keypad(True)
         curses.curs_set(1)
@@ -102,13 +107,14 @@ class Battleship:
 
 
     def draw_status(self):
-        self.stdscr.addstr(1, 0, " " * self.columns)
+        self.stdscr.addstr(3, 0, " " * self.columns)
+        self.stdscr.addstr(2, 0, " " * self.columns)
 
         ships_text = f"Navios: {self.num_ships}"
-        self.stdscr.addstr(0, self.columns - len(ships_text) - 1, ships_text)
+        self.stdscr.addstr(2, self.columns - len(ships_text) - 1, ships_text)
 
-        chances_text = f"Chances: {self.chances} Dificuldade: {self.difficulty_percentage}"
-        self.stdscr.addstr(1, self.columns - len(chances_text) - 1, chances_text)
+        chances_text = f"Chances: {self.chances}"
+        self.stdscr.addstr(3, self.columns - len(chances_text) - 1, chances_text)
 
         self.stdscr.refresh()
 
@@ -215,7 +221,6 @@ class Battleship:
                 break
 
 
-
     def fire(self):
         for ship in self.ship_list:
             if ship.register_hit(self.cursor_x, self.cursor_y):
@@ -239,6 +244,27 @@ class Battleship:
 
 
     def play(self):
+        min_height = len(self.title) + 9
+        min_width = max(len(line) for line in self.title)
+
+        self.rows, self.columns = self.stdscr.getmaxyx()
+
+        if self.rows < min_height or self.columns < min_width:
+            self.stdscr.clear()
+            message1 = "Tela muito pequena!"
+            central_y1 = self.rows // 2
+            central_x1 = (self.columns - len(message1)) // 2
+            self.stdscr.addstr(central_y1, central_x1, message1)
+
+            message2 = "Aumente a janela."
+            central_y2 = self.rows // 2 + 1
+            central_x2 = (self.columns - len(message2)) // 2
+            self.stdscr.addstr(central_y2, central_x2, message2)
+            self.stdscr.refresh()
+            self.stdscr.getch()
+            sys.exit(0)
+
+
         self.menu()
         self.setup()
 
