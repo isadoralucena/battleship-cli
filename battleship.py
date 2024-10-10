@@ -2,7 +2,7 @@ from ship import Ship
 import random
 import curses
 import sys
-from pprint import pprint
+import time
 
 class Battleship:
     def __init__(self, stdscr, selected_option = 0, difficulty_index = 1, use_emoji=False):
@@ -70,6 +70,58 @@ class Battleship:
         self.num_ships = self.calculate_num_ships()
         self.chances = self.calculate_chances()
         self.generate_ships()
+
+
+    def draw_battle_naval_blocks(self, y, x, flash_on):
+        if flash_on:
+            for i, line in enumerate(self.title):
+                self.stdscr.addstr(y + i, x, line, curses.color_pair(2))
+
+        credits = "por Isadora Lucena - UFCG, 2024.1"
+        self.stdscr.addstr(y + len(self.title) + 1, x + (101 - len(credits)) // 2, credits, curses.color_pair(1))
+
+
+    def animate(self):
+        curses.start_color()
+        curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+
+        curses.curs_set(0)
+
+        self.stdscr.nodelay(True)
+
+        height, width = self.stdscr.getmaxyx()
+
+        flash_on = True
+        flash_delay = 0.5
+        last_flash_time = time.time()
+
+        text_height = len(self.title)
+        text_width = max(len(line) for line in self.title)
+
+        start_y = (height - text_height) // 2
+        start_x = (width - text_width) // 2
+
+        intro_duration = 5
+        intro_start_time = time.time()
+
+        while True:
+            self.stdscr.clear()
+
+            self.draw_battle_naval_blocks(start_y, start_x, flash_on)
+
+            self.stdscr.refresh()
+
+            if time.time() - last_flash_time > flash_delay:
+                flash_on = not flash_on
+                last_flash_time = time.time()
+
+            key = self.stdscr.getch()
+            if key != -1 or (time.time() - intro_start_time > intro_duration):
+                self.stdscr.nodelay(False)
+                break
+
+            time.sleep(0.1)
 
 
     def calculate_num_ships(self):
@@ -264,7 +316,7 @@ class Battleship:
             self.stdscr.getch()
             sys.exit(0)
 
-
+        self.animate()
         self.menu()
         self.setup()
 
