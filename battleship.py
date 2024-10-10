@@ -2,13 +2,20 @@ from ship import Ship
 import random
 import curses
 import sys
+from pprint import pprint
 
 class Battleship:
-    def __init__(self, stdscr, difficulty_percentage=0.1, use_emoji=False):
+    def __init__(self, stdscr, selected_option = 0, difficulty_index = 1, use_emoji=False):
         self.stdscr = stdscr
-        self.difficulty_percentage = difficulty_percentage
-        self.num_ships = self.calculate_num_ships()
-        self.chances = self.calculate_chances()
+
+        self.difficulty_map = {
+            0: 0.40,
+            1: 0.01 
+        }
+        self.difficulty_percentage = self.difficulty_map[difficulty_index]
+
+        self.num_ships = 0
+        self.chances = 0
 
         self.use_emoji = use_emoji
         self.intermediate_character_of_ship = "🚢" if self.use_emoji else "N"
@@ -21,9 +28,9 @@ class Battleship:
         }
 
         self.menu_options = ["Jogar", "Configurações", "Sair"]
-        self.selected_option = 0
-        self.difficulty_levels = ["Fácil", "Médio", "Difícil"]
-        self.difficulty_index = 2 
+        self.selected_option = selected_option
+        self.difficulty_levels = ["Fácil", "Difícil"]
+        self.difficulty_index = difficulty_index 
         self.title = [
             "██████╗  █████╗ ████████╗ █████╗ ██╗     ██╗  ██╗ █████╗     ███╗   ██╗ █████╗ ██╗   ██╗ █████╗ ██╗     ",
             "██╔══██╗██╔══██╗╚══██╔══╝██╔══██╗██║     ██║  ██║██╔══██╗    ████╗  ██║██╔══██╗██║   ██║██╔══██╗██║     ",
@@ -55,17 +62,19 @@ class Battleship:
         self.win.keypad(True)
         curses.curs_set(1)
 
+        self.num_ships = self.calculate_num_ships()
+        self.chances = self.calculate_chances()
         self.generate_ships()
 
 
     def calculate_num_ships(self):
         rows, columns = self.stdscr.getmaxyx()
-        max_ships = (rows - 2) * (columns - 2)
-        return random.randint(5, int(max_ships * self.difficulty_percentage))
+        max_ships = (rows//2) * (columns//2)
+        return random.randint(int(self.difficulty_percentage * 100), int(max_ships * self.difficulty_percentage))
 
 
     def calculate_chances(self):
-        return random.randint(5, max(5, int(self.num_ships * self.difficulty_percentage)))
+        return random.randint(5, max(10, int(self.num_ships * self.difficulty_percentage)))
    
 
     def draw_ship(self, positions):
@@ -88,7 +97,7 @@ class Battleship:
                 if not any(set(new_ship_positions) & set(ship.positions) for ship in self.ship_list):
                     new_ship = Ship(new_ship_positions)
                     self.ship_list.append(new_ship)
-                    # self.draw_ship(new_ship_positions)
+                    #self.draw_ship(new_ship_positions)
                     break
 
 
@@ -98,7 +107,7 @@ class Battleship:
         ships_text = f"Navios: {self.num_ships}"
         self.stdscr.addstr(0, self.columns - len(ships_text) - 1, ships_text)
 
-        chances_text = f"Chances: {self.chances}"
+        chances_text = f"Chances: {self.chances} Dificuldade: {self.difficulty_percentage}"
         self.stdscr.addstr(1, self.columns - len(chances_text) - 1, chances_text)
 
         self.stdscr.refresh()
@@ -182,12 +191,12 @@ class Battleship:
             difficulty_text = f"Dificuldade: {self.difficulty_levels[self.difficulty_index]}"
             self.stdscr.addstr(start_line, (width - len(difficulty_text)) // 2, difficulty_text)
 
-            emojis_text = "Usar Emojis: " + ("Sim" if self.use_emoji else "Não")
-            self.stdscr.addstr(start_line + 1, (width - len(emojis_text)) // 2, emojis_text)
+            # emojis_text = "Usar Emojis: " + ("Sim" if self.use_emoji else "Não")
+            # self.stdscr.addstr(start_line + 1, (width - len(emojis_text)) // 2, emojis_text)
 
             instructions = [
                 "Pressione 'd' para mudar a dificuldade.",
-                "Pressione 'e' para mudar a opção de emojis.",
+                #"Pressione 'e' para mudar a opção de emojis.",
                 "Pressione qualquer tecla para voltar ao menu."
             ]
             
@@ -199,8 +208,9 @@ class Battleship:
             key = self.stdscr.getch()  
             if key == ord('d'):  
                 self.difficulty_index = (self.difficulty_index + 1) % len(self.difficulty_levels)
-            elif key == ord('e'): 
-                self.use_emoji = not self.use_emoji
+                self.difficulty_percentage = self.difficulty_map[self.difficulty_index]
+            # elif key == ord('e'): 
+            #     self.use_emoji = not self.use_emoji
             else:  
                 break
 
@@ -229,8 +239,8 @@ class Battleship:
 
 
     def play(self):
-        self.setup()
         self.menu()
+        self.setup()
 
         while True:
             self.draw_status()
