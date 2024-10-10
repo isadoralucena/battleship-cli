@@ -154,7 +154,7 @@ class Battleship:
                 if not any(set(new_ship_positions) & set(ship.positions) for ship in self.ship_list):
                     new_ship = Ship(new_ship_positions)
                     self.ship_list.append(new_ship)
-                    #self.draw_ship(new_ship_positions)
+                    self.draw_ship(new_ship_positions)
                     break
 
 
@@ -192,6 +192,43 @@ class Battleship:
             self.cursor_y += 1
         elif key == curses.KEY_UP and self.cursor_y > 1:
             self.cursor_y -= 1
+
+    def end_game(self):
+        self.stdscr.clear()
+        height, width = self.stdscr.getmaxyx()
+        curses.curs_set(0)
+
+        self.stylized_title()
+
+        title = "NÃO FOI DESSA VEZ..." if self.chances == 0 else "PARABÉNS!!! VOCÊ GANHOU"
+        title_y = len(self.title) + 4
+        self.stdscr.addstr(title_y, (width - len(title)) // 2, title, curses.A_BOLD)
+
+        options = ["Jogar de novo", "Sair"]
+        selected_option = 0
+
+        option_start_y = title_y + 2
+
+        while True:
+            for idx, option in enumerate(options):
+                if idx == selected_option:
+                    self.stdscr.addstr(option_start_y + idx, (width - len(option)) // 2, option, curses.A_REVERSE)
+                else:
+                    self.stdscr.addstr(option_start_y + idx, (width - len(option)) // 2, option)
+
+            self.stdscr.refresh()
+
+            key = self.stdscr.getch()
+            if key == curses.KEY_UP:
+                selected_option = (selected_option - 1) % len(options)
+            elif key == curses.KEY_DOWN:
+                selected_option = (selected_option + 1) % len(options)
+            elif key == curses.KEY_ENTER or key in [10, 13]:
+                if selected_option == 0:
+                    self.play()
+                elif selected_option == 1:
+                    sys.exit(0)
+
 
     def menu(self):
         while True:
@@ -329,8 +366,10 @@ class Battleship:
             key = self.win.getch()
             self.win.addstr(self.cursor_y, self.cursor_x, self.last_char)
 
-            if key == ord('q') or self.chances == 0 or self.num_ships == 0:
+            if key == ord('q'):
                 break
+            elif self.chances == 0 or self.num_ships == 0:
+                self.end_game()
             elif key == ord('\n'):
                 self.fire()
             else:
