@@ -154,7 +154,7 @@ class Battleship:
                 if not any(set(new_ship_positions) & set(ship.positions) for ship in self.ship_list):
                     new_ship = Ship(new_ship_positions)
                     self.ship_list.append(new_ship)
-                    self.draw_ship(new_ship_positions)
+                    #self.draw_ship(new_ship_positions)
                     break
 
 
