@@ -153,7 +153,7 @@ class Battleship:
                 if not any(set(new_ship_positions) & set(ship.positions) for ship in self.ship_list):
                     new_ship = Ship(new_ship_positions)
                     self.ship_list.append(new_ship)
-                    self.draw_ship(new_ship_positions)
+                    #self.draw_ship(new_ship_positions)
                     break
 
 
@@ -325,6 +325,27 @@ class Battleship:
         self.win.refresh()  
 
 
+    def show_ship_legend(self):
+        legend_text = [
+            # "Navios:",
+            "S - Submarino",
+            "DD - Destroyer",
+            "CCC - Cruzador",
+            "PPPP - Porta-avião"
+        ]
+
+        height, _ = self.stdscr.getmaxyx()
+
+        start_y = height - len(legend_text)
+        start_x = 1
+        
+        for i, line in enumerate(legend_text):
+            self.stdscr.addstr(start_y + i, start_x, line)
+        
+        self.stdscr.refresh()
+
+
+
     def play(self):
         min_height = len(self.title) + 9
         min_width = max(len(line) for line in self.title)
@@ -352,6 +373,7 @@ class Battleship:
 
         while True:
             self.draw_status()
+            self.show_ship_legend()
             self.win.move(self.cursor_y, self.cursor_x)
             self.win.addstr(self.cursor_y, self.cursor_x, '█')
             self.win.refresh()
