@@ -229,6 +229,9 @@ class Battleship:
         self.menu()
         self.setup()
 
+        sys.stdout.write("\033[?25l")
+        sys.stdout.flush()
+
         while True:
             self.display.display_status(self.num_ships, self.chances)
             self.display.display_ship_legend()
