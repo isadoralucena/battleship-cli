@@ -15,7 +15,7 @@ class Display:
         ]
     
 
-    def display_title(self, empty_space=2):
+    def display_title(self, empty_space):
         curses.start_color()
         curses.init_pair(1, curses.COLOR_YELLOW, curses.COLOR_BLACK)
         self.stdscr.clear()
@@ -27,20 +27,28 @@ class Display:
     def display_menu(self, title, options, selected_option):
         self.stdscr.clear()
         width = self.columns
+        height = self.rows
         curses.curs_set(0)
 
-        self.display_title()
+        start_y = (self.rows - len(self.title)) // 4
+        self.display_title(start_y)
 
-        title_y = len(self.title) + 4 
-        self.stdscr.addstr(title_y, (width - len(title)) // 2, title, curses.A_BOLD)
+        title_height = len(self.title)
+        
+        total_menu_height = 1 + len(options) + 1
+        available_space = height - title_height - 1
+        start_y = title_height + 1 + (available_space - total_menu_height) // 2
+
+        self.stdscr.addstr(start_y, (width - len(title)) // 2, title, curses.A_BOLD)
 
         for idx, option in enumerate(options):
-            option_y = title_y + 2 + idx 
+            option_y = start_y + 2 + idx
             if idx == selected_option:
-                self.stdscr.addstr(option_y, (width - len(option)) // 2, option, curses.A_REVERSE) 
+                self.stdscr.addstr(option_y, (width - len(option)) // 2, option, curses.A_REVERSE)
             else:
                 self.stdscr.addstr(option_y, (width - len(option)) // 2, option)
-        self.stdscr.refresh()  
+
+        self.stdscr.refresh()
 
 
     def display_credits(self, start_y):
@@ -97,26 +105,31 @@ class Display:
         self.stdscr.refresh()
 
     def display_settings(self, difficulty_levels, difficulty_index, difficulty_map, difficulty_percentage):
-        self.stdscr.clear() 
         width = self.columns
+        height = self.rows
 
-        self.display_title()
-
-        settings_title = "CONFIGURAÇÕES"
-        settings_title_y = len(self.title) + 4 
-        self.stdscr.addstr(settings_title_y, (width - len(settings_title)) // 2, settings_title, curses.A_BOLD)
-
-        start_line = settings_title_y + 2
-
-        difficulty_text = f"Dificuldade: {difficulty_levels[difficulty_index]}"
-        self.stdscr.addstr(start_line, (width - len(difficulty_text)) // 2, difficulty_text)
+        title_height = len(self.title)
+        start_y = (self.rows - title_height) // 4
+        self.display_title(start_y)
 
         instructions = [
             "Pressione 'd' para mudar a dificuldade.",
             "Pressione qualquer tecla para voltar ao menu."
         ]
         
-        for idx, instruction in enumerate(instructions):
-            self.stdscr.addstr(start_line + 5 + idx, (width - len(instruction)) // 2, instruction)
+        settings_title = "CONFIGURAÇÕES"
+        total_menu_height = 2 + len(instructions) + 1
+        available_space = height - title_height - 1
+        start_y = title_height + 1 + (available_space - total_menu_height) // 2
 
-        self.stdscr.refresh() 
+        self.stdscr.addstr(start_y, (width - len(settings_title)) // 2, settings_title, curses.A_BOLD)
+
+        start_y += 2
+        difficulty_text = f"Dificuldade: {difficulty_levels[difficulty_index]}"
+        self.stdscr.addstr(start_y, (width - len(difficulty_text)) // 2, difficulty_text)
+
+        for idx, instruction in enumerate(instructions):
+            instruction_y = start_y + 2 + idx
+            self.stdscr.addstr(instruction_y, (width - len(instruction)) // 2, instruction)
+
+        self.stdscr.refresh()
