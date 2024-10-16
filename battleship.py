@@ -46,8 +46,8 @@ class Battleship:
 
         self.display.display_setup()
 
-        self.win_height = self.rows - 8
-        self.win_width = self.columns//2 + 2
+        self.win_height = self.rows//2
+        self.win_width = self.columns//3
 
         start_y = (self.rows - self.win_height) // 2
         start_x = (self.columns - self.win_width) // 2
