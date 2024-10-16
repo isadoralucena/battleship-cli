@@ -143,7 +143,7 @@ class Battleship:
                 selected_option = (selected_option - 1) % len(options)
             elif key == curses.KEY_DOWN:
                 selected_option = (selected_option + 1) % len(options)
-            elif key == curses.KEY_ENTER or key in [10, 13]:
+            elif key == curses.KEY_ENTER or key in [10, 13] or key == ord(' '):
                 if selected_option == 0:
                     self.play()
                 elif selected_option == 1:
@@ -171,7 +171,7 @@ class Battleship:
                 self.selected_option = (self.selected_option - 1) % len(self.menu_options)
             elif key == curses.KEY_DOWN:
                 self.selected_option = (self.selected_option + 1) % len(self.menu_options)
-            elif key in [curses.KEY_ENTER, 10, 13]:  
+            elif key == curses.KEY_ENTER or key in [10, 13] or key == ord(' '): 
                 if self.selected_option == 0: 
                     break
                 elif self.selected_option == 1: 
@@ -246,7 +246,7 @@ class Battleship:
                 break
             elif self.chances == 0 or self.num_ships == 0:
                 self.end_game()
-            elif key == ord('\n'):
+            elif key == ord('\n') or key == ord(' '):
                 self.fire()
             else:
                 self.move_cursor(key)
